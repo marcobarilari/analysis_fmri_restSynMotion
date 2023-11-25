@@ -1,2 +1,6 @@
 *DS_Store
 .vscode
+
+inputs/temp
+
+outputs/temp
