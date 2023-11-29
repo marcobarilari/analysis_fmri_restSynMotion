@@ -1,6 +1,7 @@
 *DS_Store
 .vscode
 
+# ignore some huge dataset for the preprocessed data until I am sure about what I am doing
 inputs/temp
-
 outputs/temp
+code/archive
