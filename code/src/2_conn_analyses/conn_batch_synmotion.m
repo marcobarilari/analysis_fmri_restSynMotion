@@ -20,12 +20,12 @@
 %
 
 %% DEFAULT SETTINGS: EDIT THE LINES BELOW (minimally set CONNECTOMEpath to the actual location of your connectome data)
-TARGETpath=pwd;                                                             % target folder for conn project (default current folder)
-CONNECTOMEpath='/projectnb/connectomedb/data/%s/MNINonLinear';              % source of connectome dataset (%s stands for numeric subject-specific folders)
+TARGETpath='/Users/barilari/data/datalad/analysis_fmri_restSynMotion/outputs/temp';                                                             % target folder for conn project (default current folder)
+CONNECTOMEpath='/Users/barilari/data/datalad/analysis_fmri_restSynMotion/inputs/temp/preprocessed_nitrc/syn-motion/%s/MNINonLinear';              % source of connectome dataset (%s stands for numeric subject-specific folders)
 RUNPARALLEL=false;                                                           % run in parallel using computer cluster
 NSUBJECTS=[];                                                               % number of subjects to include in your project (leave empty for all subjects)
 NJOBS=[];                                                                   % number of parallel jobs to submit (leave empty for one job per subject)
-COPYFILES=false;                                                            % true/false: set to true if you do not have write-permissions into connectome data folders
+COPYFILES=true;                                                            % true/false: set to true if you do not have write-permissions into connectome data folders
                                                                             %   This will create a local copy (in same folder as your conn project) of the structural/functional data
                                                                             %   where any post-processed files will also be stored.
 OVERWRITE=false;                                                            % overwrites files if they exist in target folder (unzipped files and/or files in local-copy folder)
@@ -47,15 +47,15 @@ NJOBS=min(NSUBJECTS,NJOBS);
 for n=1:numel(subs)
     fprintf('Locating subject %s files\n',subs{n});
     
-    t1=fullfile(sprintf(CONNECTOMEpath,subs{n}),'T1w_restore_brain.nii.gz');                                        % STRUCTURAL VOLUME
-    f1=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST1_LR','rfMRI_REST1_LR_hp2000_clean.nii.gz');   % FUNCTIONAL VOLUME (1/4)
-    f2=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST1_RL','rfMRI_REST1_RL_hp2000_clean.nii.gz');   % FUNCTIONAL VOLUME (2/4)
-    f3=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST2_LR','rfMRI_REST2_LR_hp2000_clean.nii.gz');   % FUNCTIONAL VOLUME (3/4)
-    f4=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST2_RL','rfMRI_REST2_RL_hp2000_clean.nii.gz');   % FUNCTIONAL VOLUME (4/4)
-    r1=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST1_LR','Movement_Regressors.txt');              % REALIGNMENT FILE (1/4)
-    r2=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST1_RL','Movement_Regressors.txt');              % REALIGNMENT FILE (2/4)
-    r3=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST2_LR','Movement_Regressors.txt');              % REALIGNMENT FILE (3/4)
-    r4=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST2_RL','Movement_Regressors.txt');              % REALIGNMENT FILE (4/4)
+    t1=fullfile(sprintf(CONNECTOMEpath,subs{n}),'other','T1w_restore_brain.nii.gz');                                        % STRUCTURAL VOLUME
+    f1=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST1_AP','rfMRI_REST1_AP_hp2000_clean.nii.gz');   % FUNCTIONAL VOLUME (1/4)
+    f2=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST1_PA','rfMRI_REST1_PA_hp2000_clean.nii.gz');   % FUNCTIONAL VOLUME (2/4)
+    f3=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST2_AP','rfMRI_REST2_AP_hp2000_clean.nii.gz');   % FUNCTIONAL VOLUME (3/4)
+    f4=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST2_PA','rfMRI_REST2_PA_hp2000_clean.nii.gz');   % FUNCTIONAL VOLUME (4/4)
+    r1=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST1_AP','Movement_Regressors.txt');              % REALIGNMENT FILE (1/4)
+    r2=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST1_PA','Movement_Regressors.txt');              % REALIGNMENT FILE (2/4)
+    r3=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST2_AP','Movement_Regressors.txt');              % REALIGNMENT FILE (3/4)
+    r4=fullfile(sprintf(CONNECTOMEpath,subs{n}),'Results','rfMRI_REST2_PA','Movement_Regressors.txt');              % REALIGNMENT FILE (4/4)
     if isempty(dir(t1)), error('file %s not found',t1); end
     if isempty(dir(f1)), error('file %s not found',f1); end
     if isempty(dir(f2)), error('file %s not found',f2); end
@@ -106,13 +106,24 @@ end                                                     % note: use default para
 % CONN Setup                                           
 batch.Setup.isnew=1;
 batch.Setup.nsubjects=NSUBJECTS;
-batch.Setup.RT=0.72;                                    % TR (seconds)
+batch.Setup.RT=0.8;                                    % TR (seconds)
 
 batch.Setup.conditions.names={'rest'};                  % single condition (aggregate across all sessions)
-for ncond=1,for nsub=1:NSUBJECTS,for nses=1:nsessions,      batch.Setup.conditions.onsets{ncond}{nsub}{nses}=0; batch.Setup.conditions.durations{ncond}{nsub}{nses}=inf;end;end;end     % rest condition (all sessions)
+for ncond=1
+    for nsub=1:NSUBJECTS
+        for nses=1:nsessions      
+            batch.Setup.conditions.onsets{ncond}{nsub}{nses}=0; 
+            batch.Setup.conditions.durations{ncond}{nsub}{nses}=inf;
+        end
+    end
+end     % rest condition (all sessions)
 
 batch.Setup.functionals=repmat({{}},[NSUBJECTS,1]);     % Point to functional volumes for each subject/session
-for nsub=1:NSUBJECTS,for nses=1:nsessions,                  batch.Setup.functionals{nsub}{nses}=FUNCTIONAL_FILE(nsub,nses);end; end 
+for nsub=1:NSUBJECTS
+    for nses=1:nsessions
+        batch.Setup.functionals{nsub}{nses}=FUNCTIONAL_FILE(nsub,nses);
+    end
+end
 
 batch.Setup.structurals=STRUCTURAL_FILE;                % Point to anatomical volumes for each subject
 
@@ -120,7 +131,11 @@ batch.Setup.voxelresolution=1;                          % default 2mm isotropic 
 
 batch.Setup.covariates.names={'realignment'};
 batch.Setup.covariates.files{1}=repmat({{}},[NSUBJECTS,1]);      
-for nsub=1:NSUBJECTS,for nses=1:nsessions,                  batch.Setup.covariates.files{1}{nsub}{nses}=REALIGNMENT_FILE(nsub,nses);end; end 
+for nsub=1:NSUBJECTS
+    for nses=1:nsessions
+        batch.Setup.covariates.files{1}{nsub}{nses}=REALIGNMENT_FILE(nsub,nses);
+    end
+end
 
 batch.Setup.outputfiles=[0,1,0,0,0,0];                  % creates d*.nii denoised output files
 batch.Setup.analyses=[1,2];                             % seed-to-voxel and ROI-to-ROI pipelines
